@@ -1,0 +1,303 @@
+services:
+  app:
+    image: ghcr.io/pycodebr/scsi_v1:latest
+    env_file:
+      - .env
+    secrets:
+      - SCSI_SECRET_KEY
+      - SCSI_POSTGRES_PASSWORD
+      - SCSI_OPENAI_API_KEY
+    environment:
+      DEBUG: 'False'
+      ALLOWED_HOSTS: scsi.digital,.scsi.digital,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: https://scsi.digital,https://*.scsi.digital
+      REDIS_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SECRET_KEY_FILE: /run/secrets/SCSI_SECRET_KEY
+      OPENAI_API_KEY_FILE: /run/secrets/SCSI_OPENAI_API_KEY
+    volumes:
+      - media:/app/media
+      - staticfiles:/app/staticfiles
+    networks:
+      - traefik_public
+      - scsi_v1_internal
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health/", timeout=5).read()']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      replicas: 2
+      update_config:
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=traefik_public
+        - traefik.http.routers.scsi.rule=Host(`scsi.digital`)
+        - traefik.http.routers.scsi.entrypoints=websecure
+        - traefik.http.routers.scsi.tls.certresolver=cloudflare
+        - traefik.http.services.scsi.loadbalancer.server.port=8000
+
+  celery_worker:
+    image: ghcr.io/pycodebr/scsi_v1:latest
+    command: ['scripts/entrypoint-celery.sh', 'celery', '-A', 'core', 'worker', '--loglevel=info']
+    env_file:
+      - .env
+    environment:
+      DEBUG: 'False'
+      ALLOWED_HOSTS: scsi.digital,.scsi.digital,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: https://scsi.digital,https://*.scsi.digital
+      REDIS_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SECRET_KEY_FILE: /run/secrets/SCSI_SECRET_KEY
+      OPENAI_API_KEY_FILE: /run/secrets/SCSI_OPENAI_API_KEY
+    secrets:
+      - SCSI_SECRET_KEY
+      - SCSI_OPENAI_API_KEY
+    networks:
+      - scsi_v1_internal
+      - scsi_v1_egress
+    volumes:
+      - media:/app/media
+    healthcheck:
+      test: ['CMD', 'celery', '-A', 'core', 'inspect', 'ping', '-d', 'celery@$${HOSTNAME}']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  celery_beat:
+    image: ghcr.io/pycodebr/scsi_v1:latest
+    command: ['scripts/entrypoint-celery.sh', 'celery', '-A', 'core', 'beat', '--loglevel=info', '--schedule=/tmp/celerybeat-schedule']
+    env_file:
+      - .env
+    environment:
+      DEBUG: 'False'
+      ALLOWED_HOSTS: scsi.digital,.scsi.digital,localhost,127.0.0.1
+      CSRF_TRUSTED_ORIGINS: https://scsi.digital,https://*.scsi.digital
+      REDIS_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      SECRET_KEY_FILE: /run/secrets/SCSI_SECRET_KEY
+      OPENAI_API_KEY_FILE: /run/secrets/SCSI_OPENAI_API_KEY
+    secrets:
+      - SCSI_SECRET_KEY
+      - SCSI_OPENAI_API_KEY
+    networks:
+      - scsi_v1_internal
+      - scsi_v1_egress
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import core.celery']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
+
+  postgresql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: scsi
+      POSTGRES_USER: scsi
+      POSTGRES_PASSWORD_FILE: /run/secrets/SCSI_POSTGRES_PASSWORD
+    secrets:
+      - SCSI_POSTGRES_PASSWORD
+    volumes:
+      - postgresql:/var/lib/postgresql/data
+    networks:
+      - scsi_v1_internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U scsi -d scsi']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis:/data
+    networks:
+      - scsi_v1_internal
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: scsi
+      RABBITMQ_DEFAULT_PASS_FILE: /run/secrets/SCSI_POSTGRES_PASSWORD
+      RABBITMQ_DEFAULT_VHOST: scsi
+    secrets:
+      - SCSI_POSTGRES_PASSWORD
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - scsi_v1_internal
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.20'
+          memory: 256M
+
+  traefik:
+    image: traefik:v3.1
+    command:
+      - --providers.docker=true
+      - --providers.docker.swarmMode=true
+      - --providers.docker.exposedbydefault=false
+      - --ping=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.cloudflare.acme.email=admin@scsi.digital
+      - --certificatesresolvers.cloudflare.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.cloudflare.acme.dnschallenge=true
+      - --certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare
+      - --entrypoints.web.forwardedHeaders.trustedIPs=173.245.48.0/20,103.21.244.0/22,103.22.200.0/22,103.31.4.0/22,141.101.64.0/18,108.162.192.0/18,190.93.240.0/20,188.114.96.0/20,197.234.240.0/22,198.41.128.0/17
+    environment:
+      CF_DNS_API_TOKEN_FILE: /run/secrets/CLOUDFLARE_DNS_API_TOKEN
+    secrets:
+      - CLOUDFLARE_DNS_API_TOKEN
+    ports:
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      - traefik_public
+    healthcheck:
+      test: ['CMD', 'traefik', 'healthcheck', '--ping']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.10'
+          memory: 128M
+
+volumes:
+  postgresql:
+  redis:
+  rabbitmq:
+  media:
+  staticfiles:
+  letsencrypt:
+
+networks:
+  traefik_public:
+    external: true
+  scsi_v1_internal:
+    driver: overlay
+    internal: true
+  scsi_v1_egress:
+    driver: overlay
+
+secrets:
+  CLOUDFLARE_DNS_API_TOKEN:
+    external: true
+  SCSI_SECRET_KEY:
+    external: true
+  SCSI_POSTGRES_PASSWORD:
+    external: true
+  SCSI_OPENAI_API_KEY:
+    external: true

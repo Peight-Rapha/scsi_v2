@@ -1,0 +1,126 @@
+services:
+  app:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,app
+      CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://0.0.0.0
+      DATABASE_URL: postgres://scsi:scsi@postgresql:5432/scsi
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://scsi:scsi@rabbitmq:5672/scsi
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/app
+      - media:/app/media
+      - staticfiles:/app/staticfiles
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health/", timeout=5).read()']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  celery_worker:
+    build: .
+    command: celery -A core worker --loglevel=info
+    env_file:
+      - .env
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,app
+      CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://0.0.0.0
+      DATABASE_URL: postgres://scsi:scsi@postgresql:5432/scsi
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://scsi:scsi@rabbitmq:5672/scsi
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - .:/app
+      - media:/app/media
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  celery_beat:
+    build: .
+    command: celery -A core beat --loglevel=info --schedule=/tmp/celerybeat-schedule
+    env_file:
+      - .env
+    environment:
+      ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,app
+      CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://0.0.0.0
+      DATABASE_URL: postgres://scsi:scsi@postgresql:5432/scsi
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://scsi:scsi@rabbitmq:5672/scsi
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - .:/app
+      - media:/app/media
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  postgresql:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: scsi
+      POSTGRES_USER: scsi
+      POSTGRES_PASSWORD: scsi
+    volumes:
+      - postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U scsi -d scsi']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: scsi
+      RABBITMQ_DEFAULT_PASS: scsi
+      RABBITMQ_DEFAULT_VHOST: scsi
+    ports:
+      - '15672:15672'
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+volumes:
+  postgresql:
+  redis:
+  rabbitmq:
+    name: scsi_v2_rabbitmq_3_13
+  media:
+  staticfiles:

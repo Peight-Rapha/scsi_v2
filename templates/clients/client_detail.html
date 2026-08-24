@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.name }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ object.name }}</h1>
+<p>Documento: {{ object.document|default:'Não informado' }}</p>
+<p>Email: {{ object.email|default:'Não informado' }}</p>
+<p>Telefone: {{ object.phone|default:'Não informado' }}</p>
+<h2>Resumo IA</h2>
+<form method="post" action="{% url 'ai_agents:summarize' 'client' object.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit">Resumir com IA</button></form>
+<p>{{ object.ai_summary|default:'Nenhum resumo gerado ainda.' }}</p>
+<div class="links">
+    <a href="{% url 'clients:update' object.pk %}">Editar</a>
+    <a href="{% url 'clients:delete' object.pk %}">Excluir</a>
+</div>
+{% endblock %}

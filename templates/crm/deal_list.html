@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}CRM | SCSI{% endblock %}
+
+{% block content %}
+<h1>CRM</h1>
+<form method="get">
+    <label for="q">Busca</label><input id="q" name="q" value="{{ request.GET.q }}" placeholder="Título ou cliente">
+    <label for="status">Status</label><input id="status" name="status" value="{{ request.GET.status }}">
+    <button type="submit">Filtrar</button>
+</form>
+<p><a class="button" href="{% url 'crm:create' %}">Nova negociação</a> <a href="{% url 'crm:kanban' %}">Ver Kanban</a></p>
+<ul>{% for deal in deals %}<li><a href="{{ deal.get_absolute_url }}">{{ deal.title }}</a> - {{ deal.stage }} - {{ deal.get_status_display }}</li>{% empty %}<li>Nenhuma negociação encontrada.</li>{% endfor %}</ul>
+{% endblock %}

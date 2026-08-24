@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuários | SCSI{% endblock %}
+
+{% block content %}
+<h1>Usuários</h1>
+<ul>
+    {% for user in users %}<li>{{ user.email }}{% if user.first_name %} - {{ user.first_name }}{% endif %}</li>{% empty %}<li>Nenhum usuário encontrado.</li>{% endfor %}
+</ul>
+{% endblock %}

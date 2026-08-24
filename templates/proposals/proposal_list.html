@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Propostas | SCSI{% endblock %}
+
+{% block content %}
+<h1>Propostas</h1>
+<form method="get">
+    <label for="q">Busca</label>
+    <input id="q" type="search" name="q" value="{{ request.GET.q }}" placeholder="Cliente, seguradora ou ramo">
+    <label for="status">Status</label>
+    <input id="status" name="status" value="{{ request.GET.status }}" placeholder="draft, sent, approved...">
+    <button type="submit">Filtrar</button>
+</form>
+<p><a class="button" href="{% url 'proposals:create' %}">Nova proposta</a></p>
+<ul>
+    {% for proposal in proposals %}<li><a href="{{ proposal.get_absolute_url }}">{{ proposal }}</a> - {{ proposal.get_status_display }}</li>{% empty %}<li>Nenhuma proposta encontrada.</li>{% endfor %}
+</ul>
+{% endblock %}

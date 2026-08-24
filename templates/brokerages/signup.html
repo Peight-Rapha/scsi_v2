@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar conta | SCSI{% endblock %}
+
+{% block content %}
+<h1>Criar conta</h1>
+<p>Cadastre sua corretora e o usuário dono no plano Free.</p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+    {% endfor %}
+    <button type="submit">Criar conta gratuita</button>
+</form>
+{% endblock %}

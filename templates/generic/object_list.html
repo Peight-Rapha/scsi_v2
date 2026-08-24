@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+<form method="get">
+    <label for="q">Busca</label>
+    <input id="q" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar">
+    <button type="submit">Filtrar</button>
+</form>
+{% if create_url_name %}<p><a class="button" href="{% url create_url_name %}">Novo registro</a></p>{% endif %}
+<ul>
+    {% for object in objects %}
+        <li><a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+    {% empty %}
+        <li>Nenhum registro encontrado.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

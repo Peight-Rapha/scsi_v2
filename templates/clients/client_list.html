@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Clientes | SCSI{% endblock %}
+
+{% block content %}
+<h1>Clientes</h1>
+<form method="get">
+    <label for="q">Busca</label>
+    <input id="q" type="search" name="q" value="{{ request.GET.q }}" placeholder="Nome, documento ou email">
+    <label for="type">Tipo</label>
+    <select id="type" name="type">
+        <option value="">Todos</option>
+        <option value="individual">Pessoa física</option>
+        <option value="company">Pessoa jurídica</option>
+    </select>
+    <button type="submit">Filtrar</button>
+</form>
+<p><a class="button" href="{% url 'clients:create' %}">Novo cliente</a></p>
+<ul>
+    {% for client in clients %}<li><a href="{{ client.get_absolute_url }}">{{ client.name }}</a> - {{ client.document }}</li>{% empty %}<li>Nenhum cliente encontrado.</li>{% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+<p>Status: {{ object.get_status_display }}</p>
+<p>Seguradora: {{ object.insurance_company|default:'Não informada' }}</p>
+<p>Ramo: {{ object.branch|default:'Não informado' }}</p>
+<p>Prêmio: {{ object.premium_amount }}</p>
+{% if can_generate_policy %}
+<form method="post" action="{% url 'policies:generate_from_proposal' object.pk %}">
+    {% csrf_token %}
+    <button type="submit">Gerar apólice</button>
+</form>
+{% else %}
+<p>Esta proposta já foi convertida em apólice.</p>
+{% endif %}
+<h2>Itens cobertos</h2>
+<p><a href="{% url 'proposals:item_create' object.pk %}">Adicionar item</a></p>
+<ul>{% for item in object.covered_items.all %}<li>{{ item.description }} - {{ item.insured_value }}</li>{% empty %}<li>Nenhum item vinculado.</li>{% endfor %}</ul>
+<h2>Coberturas</h2>
+<p><a href="{% url 'proposals:coverage_create' object.pk %}">Adicionar cobertura</a></p>
+<ul>{% for coverage in object.coverages.all %}<li>{{ coverage.name }} - limite {{ coverage.limit_amount }}</li>{% empty %}<li>Nenhuma cobertura vinculada.</li>{% endfor %}</ul>
+<h2>Resumo IA</h2>
+<form method="post" action="{% url 'ai_agents:summarize' 'proposal' object.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit">Resumir com IA</button></form>
+<p>{{ object.ai_summary|default:'Nenhum resumo gerado ainda.' }}</p>
+<div class="links">
+    <a href="{% url 'proposals:update' object.pk %}">Editar</a>
+    <a href="{% url 'proposals:delete' object.pk %}">Excluir</a>
+</div>
+{% endblock %}

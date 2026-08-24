@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.title }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ object.title }}</h1>
+<div>{% for message in object.messages.all %}<article><span class="badge">{{ message.get_role_display }}</span><div class="stream-markdown">{{ message.content_html|safe }}</div></article>{% empty %}<p>Envie a primeira pergunta para iniciar a conversa.</p>{% endfor %}</div>
+<form method="post">{% csrf_token %}<label for="message">Pergunta</label><textarea id="message" name="message" rows="4"></textarea><button type="submit">Enviar pergunta</button></form>
+<script>
+document.querySelectorAll('.stream-markdown').forEach((element) => {
+    element.style.opacity = '0';
+    setTimeout(() => { element.style.transition = 'opacity .35s ease'; element.style.opacity = '1'; }, 30);
+});
+</script>
+{% endblock %}

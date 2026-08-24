@@ -1,0 +1,22 @@
+site_name: SCSI
+site_description: Sistema de Gestão para Corretora de Seguros Inteligente
+theme:
+  name: mkdocs
+nav:
+  - Início: README.md
+  - PRD: PRD.md
+  - Arquitetura: architecture.md
+  - Multi-tenant: multi-tenant.md
+  - Segurança: security.md
+  - IA: ai.md
+  - Deploy: deploy.md
+  - Operações: operations.md
+markdown_extensions:
+  - admonition
+  - tables
+  - fenced_code
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

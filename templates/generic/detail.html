@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhe | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+<p>Criado em: {{ object.created_at }}</p>
+<p>Atualizado em: {{ object.updated_at }}</p>
+<div class="links">
+    <a href="./edit/">Editar</a>
+    <a href="./delete/">Excluir</a>
+</div>
+{% endblock %}

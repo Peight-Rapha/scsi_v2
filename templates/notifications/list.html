@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title %}Notificações | SCSI{% endblock %}
+
+{% block content %}
+<h1>Notificações</h1>
+<ul>{% for notification in notifications %}<li><span class="badge">{{ notification.get_level_display }}</span> <strong>{{ notification.title }}</strong><p>{{ notification.message }}</p>{% if not notification.is_read %}<form method="post" action="{% url 'notifications:read' notification.pk %}">{% csrf_token %}<button type="submit">Marcar como lida</button></form>{% endif %}</li>{% empty %}<li>Nenhuma notificação encontrada.</li>{% endfor %}</ul>
+{% endblock %}

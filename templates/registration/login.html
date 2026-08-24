@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Entrar | SCSI{% endblock %}
+
+{% block content %}
+<h1>Entrar no SCSI</h1>
+<p>Use seu email e senha para acessar a corretora.</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+    {% endfor %}
+    <button type="submit">Entrar</button>
+</form>
+
+<div class="links">
+    <a href="{% url 'accounts:password_reset' %}">Esqueci minha senha</a>
+</div>
+{% endblock %}

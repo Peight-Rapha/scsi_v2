@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.title }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>{{ object.title }}</h1>
+<p>Cliente: {{ object.client }}</p>
+<p>Etapa: {{ object.stage }}</p>
+<p>Status: {{ object.get_status_display }}</p>
+<p>Responsável: {{ object.assigned_to|default:'Não definido' }}</p>
+<h2>Resumo IA</h2>
+<form method="post" action="{% url 'ai_agents:summarize' 'deal' object.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit">Resumir com IA</button></form>
+<p>{{ object.ai_summary|default:'Nenhum resumo gerado ainda.' }}</p>
+{% endblock %}

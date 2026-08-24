@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Sinistros | SCSI{% endblock %}
+
+{% block content %}
+<h1>Sinistros</h1>
+<form method="get">
+    <label for="q">Busca</label><input id="q" name="q" value="{{ request.GET.q }}" placeholder="Número ou cliente">
+    <label for="status">Status</label><input id="status" name="status" value="{{ request.GET.status }}">
+    <button type="submit">Filtrar</button>
+</form>
+<p><a class="button" href="{% url 'claims:create' %}">Novo sinistro</a></p>
+<ul>{% for claim in claims %}<li><a href="{{ claim.get_absolute_url }}">{{ claim.claim_number }}</a> - {{ claim.get_status_display }}</li>{% empty %}<li>Nenhum sinistro encontrado.</li>{% endfor %}</ul>
+{% endblock %}

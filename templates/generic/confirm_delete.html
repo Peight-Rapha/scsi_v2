@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar exclusão | SCSI{% endblock %}
+
+{% block content %}
+<h1>Confirmar exclusão</h1>
+<p>Deseja excluir “{{ object }}”?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Excluir</button>
+</form>
+{% endblock %}

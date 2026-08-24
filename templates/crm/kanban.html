@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Kanban CRM | SCSI{% endblock %}
+
+{% block content %}
+<h1>Kanban CRM</h1>
+<p><a class="button" href="{% url 'crm:stage_create' %}">Nova etapa</a></p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;align-items:start;">
+    {% for stage in stages %}
+        <section class="kanban-stage" data-stage="{{ stage.pk }}" style="border-top:6px solid {{ stage.color }};background:#f8fafc;border-radius:12px;padding:12px;min-height:160px;">
+            <h2>{{ stage.name }}</h2>
+            <p><a href="{% url 'crm:stage_update' stage.pk %}">Editar etapa</a></p>
+            {% for deal in stage.deals.all %}
+                <article class="kanban-card" draggable="true" data-move-url="{% url 'crm:move' deal.pk %}" style="background:white;border:1px solid #dbe3ef;border-radius:10px;padding:10px;margin:10px 0;cursor:grab;">
+                    <strong>{{ deal.title }}</strong><br>
+                    {{ deal.client }}
+                    <form method="post" action="{% url 'crm:move' deal.pk %}">
+                        {% csrf_token %}
+                        <label for="stage-{{ deal.pk }}">Mover para</label>
+                        <select id="stage-{{ deal.pk }}" name="stage">{% for target in stages %}<option value="{{ target.pk }}" {% if target.pk == stage.pk %}selected{% endif %}>{{ target.name }}</option>{% endfor %}</select>
+                        <button type="submit">Mover</button>
+                    </form>
+                </article>
+            {% empty %}<p>Nenhum card.</p>{% endfor %}
+        </section>
+    {% empty %}<p>Nenhuma etapa criada.</p>{% endfor %}
+</div>
+<script>
+const csrfToken = '{{ csrf_token }}';
+document.querySelectorAll('.kanban-card').forEach((card) => {
+    card.addEventListener('dragstart', (event) => {
+        event.dataTransfer.setData('text/plain', card.dataset.moveUrl);
+    });
+});
+document.querySelectorAll('.kanban-stage').forEach((stage) => {
+    stage.addEventListener('dragover', (event) => event.preventDefault());
+    stage.addEventListener('drop', (event) => {
+        event.preventDefault();
+        const formData = new FormData();
+        formData.append('stage', stage.dataset.stage);
+        fetch(event.dataTransfer.getData('text/plain'), {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken},
+            body: formData,
+            credentials: 'same-origin',
+        }).then((response) => {
+            if (response.ok || response.redirected) window.location.reload();
+        });
+    });
+});
+</script>
+{% endblock %}

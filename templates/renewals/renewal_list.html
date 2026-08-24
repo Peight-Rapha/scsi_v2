@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Renovações | SCSI{% endblock %}
+
+{% block content %}
+<h1>Renovações</h1>
+<form method="get">
+    <label for="status">Status</label><input id="status" name="status" value="{{ request.GET.status }}">
+    <label for="days">Vencendo em até X dias</label><input id="days" name="days" value="{{ request.GET.days }}" placeholder="30">
+    <button type="submit">Filtrar</button>
+</form>
+<p><a class="button" href="{% url 'renewals:create' %}">Nova renovação</a></p>
+<ul>{% for renewal in renewals %}<li><a href="{{ renewal.get_absolute_url }}">{{ renewal.policy }}</a> - {{ renewal.due_date }} - {{ renewal.get_status_display }}{% if renewal.is_due_soon %} - alerta de vencimento{% endif %}</li>{% empty %}<li>Nenhuma renovação encontrada.</li>{% endfor %}</ul>
+{% endblock %}

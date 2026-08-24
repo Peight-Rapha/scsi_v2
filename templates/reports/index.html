@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios | SCSI{% endblock %}
+
+{% block content %}
+<h1>Relatórios</h1>
+<p>Exporte dados da sua corretora em CSV ou PDF.</p>
+<table>
+    <thead><tr><th>Relatório</th><th>Exportações</th></tr></thead>
+    <tbody>{% for slug, title in reports %}<tr><td>{{ title }}</td><td><a href="{% url 'reports:csv' slug %}">CSV</a> · <a href="{% url 'reports:pdf' slug %}">PDF</a></td></tr>{% endfor %}</tbody>
+</table>
+{% endblock %}

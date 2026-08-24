@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.policy_number }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>Apólice {{ object.policy_number }}</h1>
+<p>Cliente: {{ object.client }}</p>
+<p>Seguradora: {{ object.insurance_company|default:'Não informada' }}</p>
+<p>Ramo: {{ object.branch|default:'Não informado' }}</p>
+<p>Status: {{ object.get_status_display }}</p>
+<p>Vigência: {{ object.start_date|default:'-' }} a {{ object.end_date|default:'-' }}</p>
+<h2>Itens cobertos</h2>
+<ul>{% for item in object.covered_items %}<li>{{ item.description }} - {{ item.insured_value }}</li>{% empty %}<li>Nenhum item vinculado.</li>{% endfor %}</ul>
+<h2>Coberturas</h2>
+<ul>{% for coverage in object.coverages %}<li>{{ coverage.name }} - limite {{ coverage.limit_amount }}</li>{% empty %}<li>Nenhuma cobertura vinculada.</li>{% endfor %}</ul>
+<h2>Endossos</h2>
+<ul>{% for endorsement in object.endorsements.all %}<li><a href="{{ endorsement.get_absolute_url }}">{{ endorsement }}</a> - {{ endorsement.get_type_display }}</li>{% empty %}<li>Nenhum endosso vinculado.</li>{% endfor %}</ul>
+<h2>Resumo IA</h2>
+<form method="post" action="{% url 'ai_agents:summarize' 'policy' object.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit">Resumir com IA</button></form>
+<p>{{ object.ai_summary|default:'Nenhum resumo gerado ainda.' }}</p>
+<div class="links">
+    <a href="{% url 'policies:update' object.pk %}">Editar</a>
+    <a href="{% url 'policies:delete' object.pk %}">Excluir</a>
+</div>
+{% endblock %}

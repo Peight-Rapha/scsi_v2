@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat com IA | SCSI{% endblock %}
+
+{% block content %}
+<h1>Chat com IA</h1>
+<form method="post">{% csrf_token %}<label for="title">Título da sessão</label><input id="title" name="title" placeholder="Ex.: Análise da carteira"><button type="submit">Criar sessão</button></form>
+<h2>Sessões</h2>
+<ul>{% for session in sessions %}<li><a href="{{ session.get_absolute_url }}">{{ session.title }}</a></li>{% empty %}<li>Nenhuma sessão criada.</li>{% endfor %}</ul>
+{% endblock %}

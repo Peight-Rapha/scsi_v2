@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block title %}Sessão encerrada | SCSI{% endblock %}
+
+{% block content %}
+<h1>Sessão encerrada</h1>
+<p>Você saiu da sua conta com segurança.</p>
+<a class="button" href="{% url 'accounts:login' %}">Entrar novamente</a>
+{% endblock %}

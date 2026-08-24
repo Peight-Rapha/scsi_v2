@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.claim_number }} | SCSI{% endblock %}
+
+{% block content %}
+<h1>Sinistro {{ object.claim_number }}</h1>
+<p>Cliente: {{ object.client }}</p>
+<p>Apólice: {{ object.policy }}</p>
+<p>Item coberto: {{ object.covered_item }}</p>
+<p>Status: {{ object.get_status_display }}</p>
+<h2>Anexos</h2>
+<ul>{% for attachment in object.attachments.all %}<li><a href="{% url 'attachments:download' attachment.pk %}">{{ attachment }}</a></li>{% empty %}<li>Nenhum anexo.</li>{% endfor %}</ul>
+<h2>Resumo IA</h2>
+<form method="post" action="{% url 'ai_agents:summarize' 'claim' object.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit">Resumir com IA</button></form>
+<p>{{ object.ai_summary|default:'Nenhum resumo gerado ainda.' }}</p>
+{% endblock %}

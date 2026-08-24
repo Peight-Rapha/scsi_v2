@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | SCSI{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+<div class="grid">
+    <div class="metric"><span>Clientes</span><strong>{{ metrics.clients }}</strong></div>
+    <div class="metric"><span>Apólices ativas</span><strong>{{ metrics.active_policies }}</strong></div>
+    <div class="metric"><span>Sinistros abertos</span><strong>{{ metrics.open_claims }}</strong></div>
+    <div class="metric"><span>Prêmios emitidos</span><strong>{{ metrics.premium }}</strong></div>
+    <div class="metric"><span>Comissões previstas</span><strong>{{ metrics.expected_commissions }}</strong></div>
+    <div class="metric"><span>Renovações em 30 dias</span><strong>{{ metrics.renewals_30 }}</strong></div>
+</div>
+<h2>Funil de negociações</h2>
+<table><thead><tr><th>Etapa</th><th>Negociações</th><th>Valor estimado</th></tr></thead><tbody>{% for stage in deals_by_stage %}<tr><td><span class="badge" style="background: {{ stage.color }}; color: #fff;">{{ stage.name }}</span></td><td>{{ stage.total }}</td><td>{{ stage.value|default:0 }}</td></tr>{% empty %}<tr><td colspan="3">Nenhuma etapa cadastrada.</td></tr>{% endfor %}</tbody></table>
+<h2>Apólices por status</h2>
+<table><thead><tr><th>Status</th><th>Total</th></tr></thead><tbody>{% for item in policies_by_status %}<tr><td>{{ item.status }}</td><td>{{ item.total }}</td></tr>{% empty %}<tr><td colspan="2">Nenhuma apólice encontrada.</td></tr>{% endfor %}</tbody></table>
+{% endblock %}
