@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}SCSI | Gestão para corretoras{% endblock %}
+
+{% block content %}
+<h1>SCSI</h1>
+<p>Gestão inteligente para corretoras de seguros: clientes, propostas, apólices, sinistros, renovações, comissões, relatórios e IA em uma única plataforma.</p>
+<div class="grid">
+    <div class="metric"><span>Plano inicial</span><strong>Free</strong></div>
+    <div class="metric"><span>Planos pagos</span><strong>Em breve</strong></div>
+</div>
+<div class="links">
+    <a class="button" href="{% url 'brokerages:signup' %}">Criar conta gratuita</a>
+    <a href="{% url 'accounts:login' %}">Entrar</a>
+</div>
+{% endblock %}
